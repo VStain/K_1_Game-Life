@@ -75,24 +75,57 @@ size_t getAliveNeighborsCount(char** arr, int xSize, int ySize, int x0, int y0)
     // обойд€ весь квадрат 3х3, возвращаем получившеес€ количество живых соседей
     return aliveNeighborsCount;
 }
+int alive_count(char** arr, int i, int j, int rows, int cols)
+{
+    int count = 0;
+    for (int k = i - 1; k <= i + 1; ++k) // Ўаги вверх и вниз по строкам
+        if (k >= 0 && k < rows) // ѕроверка границ пол€
+            for (int l = j - 1; l <= j + 1; ++l) // Ўаги влево и вправо по столбцам
+                if (l >= 0 && l < cols && (k != i || l != j)) // ѕроверка границ и исключаем саму €чейку
+                    if (arr[k][l] == '*') // соседка жива?
+                        ++count;
+    return count;
+}
 
 void Evolution(char** arr, char** arr2, int columns, int rows)
 {
-
-
     for (int x = 0; x < rows; ++x) // проходимс€ по строкам
     {
         for (int y = 0; y < columns; ++y) // проходимс€ по столбцам
         {
-            // вызываем функцию getAliveNeighborsCount дл€ получени€ числа живых соседей текущей точки (с координатами x и y)
-            size_t aliveNeighborsCount = getAliveNeighborsCount(arr, rows, columns, x, y);
-            if (arr[x][y] == '-')
+            // вызываем функцию alive_count (getAliveNeighborsCount) дл€ получени€ числа живых соседей текущей точки (с координатами x и y)
+            //arr2[x][y] = '-';
+            int alive_cell = alive_count(arr, x, y, rows, columns);
+            if (arr[x][y] == '-') // если клетка мертва
             {
+                for (int x0 = -1; x0 <= 1; ++x0) // проходим циклом, чтобы найти живых соседей
+                {
+                    for (int y0 = -1; y0 <= 1; ++y0)
+                    {
+                        alive_cell += arr[x + x0][y + y0]; // считаем сколько живых клеток р€дом
+                        alive_cell -= arr[x][y]; // не считаем себ€;
+                        if (arr[x][y] == 0 && alive_cell == 3) // если живых_соседок == 3
+                        {
+                            arr2[x][y] = '*'; // то оживить_клетку_в_новом_мире;
+                        }
+                    }
+                }
+            if (arr[x][y] == '*') // если клетка жива 
+            {
+                for (int x0 = -1; x0 <= 1; ++x0) // проходим циклом, чтобы найти живых соседей
+                {
+                    for (int y0 = -1; y0 <= 1; ++y0)
+                    {
+                        alive_cell += arr[x + x0][y + y0]; // считаем сколько живых клеток р€дом
+                        alive_cell -= arr[x][y]; // не считаем себ€;
+                        if (alive_cell < 2 || alive_cell > 3)   //если живых_соседок < 2 или живых_соседок > 3
+                        {
+                            arr2[x][y] = '-';   //    то умертвить_клетку_в_новом_мире;
+                        }
+                    }
+                }
 
             }
-            if (arr[x][y] == '*')
-            {
-
             }
         }
         //size_t aliveNeighborsCount = 0;
@@ -140,9 +173,12 @@ int main()
             int indexB = stoi(str);
 
 
-            if (0 <= indexA < columns && 0 <= indexB < rows)
+            if (0 <= indexA && 0 <= indexB)
             {
-                arr[indexA][indexB] = '*';
+                if (indexA < columns && indexB < rows)
+                {
+                    arr[indexA][indexB] = '*';
+                }
             }
         }
 
@@ -154,7 +190,7 @@ int main()
 
         Evolution(arr, arr2, columns, rows);
 
-        print(arr, columns, rows);
+        print(arr2, columns, rows);
         Delete_Arr(arr, columns);
         arr = nullptr;
 
@@ -165,3 +201,6 @@ int main()
     }
     return 0;
 }
+/*
+* if (arr[x][y + 1] + arr[x][y - 1] + arr[x + 1][y] + arr[x - 1][y] + arr[x + 1][y + 1] + arr[x - 1][y - 1]  == 126 ) вариант с перечислением
+*/
