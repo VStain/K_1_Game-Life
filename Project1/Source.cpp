@@ -2,14 +2,15 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
+//#include <unistd.h>
 using namespace std;
 //D:\\Test\\in.txt
 
-void print(char** arr, int columns, int rows)
+void print(char** arr, int rows, int columns)
 {
-    for (int x = 0; x < columns; ++x)
+    for (int x = 0; x < rows; ++x)
     {
-        for (int y = 0; y < rows; ++y)
+        for (int y = 0; y < columns; ++y)
         {
             cout << arr[x][y] << " ";
         }
@@ -18,9 +19,9 @@ void print(char** arr, int columns, int rows)
     cout << endl;
 }
 
-void Delete_Arr(char** arr, int columns)
+void Delete_Arr(char** arr, int rows)
 {
-    for (int x = 0; x < columns; ++x)
+    for (int x = 0; x < rows; ++x)
     {
         delete[] arr[x];
     }
@@ -75,72 +76,76 @@ size_t getAliveNeighborsCount(char** arr, int xSize, int ySize, int x0, int y0)
     // обойдя весь квадрат 3х3, возвращаем получившееся количество живых соседей
     return aliveNeighborsCount;
 }
+
 int alive_count(char** arr, int i, int j, int rows, int cols)
 {
     int count = 0;
     for (int k = i - 1; k <= i + 1; ++k) // Шаги вверх и вниз по строкам
+    {
         if (k >= 0 && k < rows) // Проверка границ поля
+        {
             for (int l = j - 1; l <= j + 1; ++l) // Шаги влево и вправо по столбцам
+            {
                 if (l >= 0 && l < cols && (k != i || l != j)) // Проверка границ и исключаем саму ячейку
+                {
                     if (arr[k][l] == '*') // соседка жива?
+                    {
                         ++count;
+                    }
+                }
+            }
+        }
+    }
     return count;
 }
 
-void Evolution(char** arr, char** arr2, int columns, int rows)
+int all_cells_count(char** arr, int rows, int columns)
+{
+    int count = 0;
+    for (int xStep = 0; xStep < rows; ++xStep)
+    {
+        for (int yStep = 0; yStep < columns; ++yStep)
+        {
+            if (arr[xStep][yStep] == '*')
+            {
+                ++count;
+            }
+        }
+    }
+    return count;
+}
+
+void panel(int round, char** arr, int rows, int columns)
+{
+    ++round;
+    int cell = all_cells_count(arr, rows, columns);
+    cout << "Generation: "<< round << '\t' << "Alive cells: " << cell << '\n' << '\n';
+}
+
+void Evolution(char** arr, char** arr2, int rows, int columns)
 {
     for (int x = 0; x < rows; ++x) // проходимся по строкам
     {
         for (int y = 0; y < columns; ++y) // проходимся по столбцам
         {
             // вызываем функцию alive_count (getAliveNeighborsCount) для получения числа живых соседей текущей точки (с координатами x и y)
-            arr2[x][y] = '-';
-            int alive_cell = alive_count(arr, x, y, rows, columns);
-            if (arr[x][y] == '-') // если клетка мертва
-            {
-                for (int x0 = rows -1; x0 <= rows + 1; ++x0) // проходим циклом, чтобы найти живых соседей
-                {
-                    if (x0 >= 0 && x0 < rows)
-                    {
-                        for (int y0 = columns -1; y0 <= columns + 1; ++y0)
-                        {
-                            if (y0 >= 0 && y0 < columns && (x != x0 || y != y0))
-                            {
-                                
-                                int cell = alive_count(arr, x, y, x0, y0);
-                                //alive_cell += arr[x + x0][y + y0]; // считаем сколько живых клеток рядом
-                                //alive_cell -= arr[x][y]; // не считаем себя;
-                                if (cell == 0 || cell == 3) // если живых_соседок == 3
-                                {
-                                    arr2[x][y] = '*'; // то оживить_клетку_в_новом_мире;
-                                }
-                            }
-                        }
-                    }
-                }
+
+            int alive_cell = alive_count(arr, x, y, rows, columns);//alive_count(arr, x, y, rows, columns);
+            arr2[x][y] = arr[x][y]; // копируем состояние клетки из старого мира
             if (arr[x][y] == '*') // если клетка жива 
             {
-                for (int x0 = rows - 1; x0 <= rows + 1; ++x0) // проходим циклом, чтобы найти живых соседей
+                if (alive_cell < 2 || alive_cell > 3)   //если живых_соседок < 2 или живых_соседок > 3
                 {
-                    if (x0 >= 0 && x0 < rows)
-                    {
-                        for (int y0 = columns - 1; y0 <= columns + 1; ++y0)
-                        {
-                            if (y0 >= 0 && y0 < columns && (x != x0 || y != y0))
-                            {
-
-                                int cell = alive_count(arr, x, y, x0, y0);
-                                //alive_cell += arr[x + x0][y + y0]; // считаем сколько живых клеток рядом
-                                //alive_cell -= arr[x][y]; // не считаем себя;
-                                if (alive_cell < 2 || alive_cell > 3)   //если живых_соседок < 2 или живых_соседок > 3
-                                {
-                                    arr2[x][y] = '-';   //    то умертвить_клетку_в_новом_мире;
-                                }
-                            }
-                        }
-                    }
+                    arr2[x][y] = '-';   //    то умертвить_клетку_в_новом_мире;
                 }
             }
+            else // если клетка мертва
+            {
+                if (alive_cell == 3) // если живых_соседок == 3
+                {
+                   arr2[x][y] = '*'; // то оживить_клетку_в_новом_мире;
+                }
+                            
             }
         }
         //size_t aliveNeighborsCount = 0;
@@ -156,9 +161,9 @@ int main()
     if (file_to_use.is_open())
     {
         file_to_use >> str;
-        int columns = stoi(str);
-        file_to_use >> str;
         int rows = stoi(str);
+        file_to_use >> str;
+        int columns = stoi(str);
 
         char** arr = new char* [columns];
         for (int x = 0; x < columns; ++x)
@@ -169,18 +174,18 @@ int main()
         char** arr2 = new char* [columns];
         for (int x = 0; x < columns; ++x)
         {
-            arr[x] = new char[rows];
+            arr2[x] = new char[rows]; 
         }
 
-        for (int x = 0; x < columns; ++x)
+        for (int x = 0; x < rows; ++x)
         {
-            for (int y = 0; y < rows; ++y)
+            for (int y = 0; y < columns; ++y)
             {
-                arr[x][y] = '-';
-                //arr2[x][y] = '-';
+                arr [x][y]  = '-';
+                arr2[x][y]  = '-';
             }
         }
-
+        
         while (!file_to_use.eof())
         {
             file_to_use >> str;
@@ -188,27 +193,45 @@ int main()
             file_to_use >> str;
             int indexB = stoi(str);
 
-
             if (0 <= indexA && 0 <= indexB)
             {
-                if (indexA < columns && indexB < rows)
+                if (indexA == 2 && indexB == 2)
+                {
+                    continue;
+                }
+                if (indexA < rows && indexB < columns)
                 {
                     arr[indexA][indexB] = '*';
                 }
-            }
+            } 
         }
-
         file_to_use.close();
 
+        int s = 0;
+        
+        do
+        {
+            int round = 0;
+            print(arr, rows, columns);
+            
+            //panel(round, arr, rows, columns);
+            Evolution(arr, arr2, rows, columns);
+            print(arr2, rows, columns);
+            Evolution(arr2, arr, rows, columns);
+            s++;
+        } while (s < 4);
+        
+        /*
+        print(arr, rows, columns);
+        Evolution(arr, arr2, columns, rows);
+        print(arr2, rows, columns);
+        Evolution(arr2, arr, columns, rows);
+        print(arr, rows, columns);
+        */
+        //std::system("clear");
 
-
-        print(arr, columns, rows);
-
-        //Evolution(arr, arr2, columns, rows);
-
-        print(arr2, columns, rows);
-        Delete_Arr(arr, columns);
-        arr = nullptr;
+        //Delete_Arr(arr, rows);
+        //arr = nullptr;
 
     }
     else
@@ -217,10 +240,8 @@ int main()
     }
     return 0;
 }
-/*
-* if (arr[x][y + 1] + arr[x][y - 1] + arr[x + 1][y] + arr[x - 1][y] + arr[x + 1][y + 1] + arr[x - 1][y - 1]  == 126 ) вариант с перечислением
-*/
+
 
 /*
-
+ 
 */
