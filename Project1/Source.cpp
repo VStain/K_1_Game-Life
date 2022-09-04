@@ -2,8 +2,9 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
-//#include <unistd.h>
+#include <windows.h>
 using namespace std;
+
 //D:\\Test\\in.txt
 
 void print(char** arr, int rows, int columns)
@@ -16,7 +17,6 @@ void print(char** arr, int rows, int columns)
         }
         cout << endl;
     }
-    cout << endl;
 }
 
 void Delete_Arr(char** arr, int rows)
@@ -99,7 +99,7 @@ int alive_count(char** arr, int i, int j, int rows, int cols)
     return count;
 }
 
-int all_cells_count(char** arr, int rows, int columns)
+int all_cells_count(char** arr, int rows, int columns) // счетчик всех живых клеток на поле
 {
     int count = 0;
     for (int xStep = 0; xStep < rows; ++xStep)
@@ -115,14 +115,13 @@ int all_cells_count(char** arr, int rows, int columns)
     return count;
 }
 
-void panel(int round, char** arr, int rows, int columns)
+void panel(int round, char** arr, int rows, int columns) // панель вывода информации о поле
 {
-    ++round;
     int cell = all_cells_count(arr, rows, columns);
-    cout << "Generation: "<< round << '\t' << "Alive cells: " << cell << '\n' << '\n';
+    cout << "Generation: " << round << '\t' << "Alive cells: " << cell << endl;
 }
 
-void Evolution(char** arr, char** arr2, int rows, int columns)
+void Evolution(char** arr, char** arr2, int rows, int columns) // функци€ создани€ жизни и смерти клеток
 {
     for (int x = 0; x < rows; ++x) // проходимс€ по строкам
     {
@@ -130,13 +129,13 @@ void Evolution(char** arr, char** arr2, int rows, int columns)
         {
             // вызываем функцию alive_count (getAliveNeighborsCount) дл€ получени€ числа живых соседей текущей точки (с координатами x и y)
 
-            int alive_cell = alive_count(arr, x, y, rows, columns);//alive_count(arr, x, y, rows, columns);
+            int alive_cell = alive_count(arr, x, y, rows, columns); // alive_count(arr, x, y, rows, columns);
             arr2[x][y] = arr[x][y]; // копируем состо€ние клетки из старого мира
             if (arr[x][y] == '*') // если клетка жива 
             {
-                if (alive_cell < 2 || alive_cell > 3)   //если живых_соседок < 2 или живых_соседок > 3
+                if (alive_cell < 2 || alive_cell > 3) // если живых_соседок < 2 или живых_соседок > 3
                 {
-                    arr2[x][y] = '-';   //    то умертвить_клетку_в_новом_мире;
+                    arr2[x][y] = '-';  // то умертвить_клетку_в_новом_мире;
                 }
             }
             else // если клетка мертва
@@ -145,17 +144,15 @@ void Evolution(char** arr, char** arr2, int rows, int columns)
                 {
                    arr2[x][y] = '*'; // то оживить_клетку_в_новом_мире;
                 }
-                            
             }
         }
-        //size_t aliveNeighborsCount = 0;
     }
 }
 
 int main()
 {
     string str;
-    ifstream file_to_use("D:\\Test\\in.txt");
+    ifstream file_to_use("D:\\Test\\in2.txt");
 
 
     if (file_to_use.is_open())
@@ -195,10 +192,10 @@ int main()
 
             if (0 <= indexA && 0 <= indexB)
             {
-                if (indexA == 2 && indexB == 2)
+                /*if (indexA == 2 && indexB == 2) // костыль, который помогает скрыть лишнюю клетку при поле 20 30
                 {
                     continue;
-                }
+                }*/
                 if (indexA < rows && indexB < columns)
                 {
                     arr[indexA][indexB] = '*';
@@ -207,32 +204,38 @@ int main()
         }
         file_to_use.close();
 
-        int s = 0;
-        
+        int round = 1;
+        int gen_real = all_cells_count(arr, rows, columns);
+        int gen_prev = all_cells_count(arr2, rows, columns);
         do
         {
-            int round = 0;
+            gen_real = all_cells_count(arr, rows, columns);
+            gen_prev = all_cells_count(arr2, rows, columns);
+            std::system("CLS"); // в Windows консоль очищаетс€ так
             print(arr, rows, columns);
-            
-            //panel(round, arr, rows, columns);
+            panel(round, arr, rows, columns);
+            Sleep(1000); // задержка экрана; подключить заголовочный файл windows.h
             Evolution(arr, arr2, rows, columns);
-            print(arr2, rows, columns);
-            Evolution(arr2, arr, rows, columns);
-            s++;
-        } while (s < 4);
-        
-        /*
-        print(arr, rows, columns);
-        Evolution(arr, arr2, columns, rows);
-        print(arr2, rows, columns);
-        Evolution(arr2, arr, columns, rows);
-        print(arr, rows, columns);
-        */
-        //std::system("clear");
+            if ( gen_real == gen_prev)
+            {
+                cout << "Game over. Stagnation has happened. " << endl;
+                break;
+            }
+            if (gen_real == 0)
+            {
+                cout << "Game over. All the cells are dead. " << endl;
+                break;
+            }
+            std::swap(arr, arr2);
+            round++;
 
-        //Delete_Arr(arr, rows);
-        //arr = nullptr;
+        } while (gen_real != gen_prev);
 
+
+        Delete_Arr(arr, rows);
+        arr = nullptr;
+        Delete_Arr(arr2, rows);
+        arr2 = nullptr;
     }
     else
     {
@@ -243,5 +246,6 @@ int main()
 
 
 /*
- 
+ 10 10 работает стабильно
+ 20 30 программа падает. “очка остановки срабатывает на строчке 215 или 216.
 */
