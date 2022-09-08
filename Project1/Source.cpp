@@ -152,7 +152,7 @@ void Evolution(char** arr, char** arr2, int rows, int columns) // функция создан
 int main()
 {
     string str;
-    ifstream file_to_use("D:\\Test\\in2.txt");
+    ifstream file_to_use("D:\\Test\\in.txt");
 
 
     if (file_to_use.is_open())
@@ -162,16 +162,16 @@ int main()
         file_to_use >> str;
         int columns = stoi(str);
 
-        char** arr = new char* [columns];
-        for (int x = 0; x < columns; ++x)
+        char** arr = new char* [rows];
+        for (int x = 0; x < rows; ++x)
         {
-            arr[x] = new char[rows];
+            arr[x] = new char[columns];
         }
 
-        char** arr2 = new char* [columns];
-        for (int x = 0; x < columns; ++x)
+        char** arr2 = new char* [rows];
+        for (int x = 0; x < rows; ++x)
         {
-            arr2[x] = new char[rows]; 
+            arr2[x] = new char[columns];
         }
 
         for (int x = 0; x < rows; ++x)
@@ -192,10 +192,6 @@ int main()
 
             if (0 <= indexA && 0 <= indexB)
             {
-                /*if (indexA == 2 && indexB == 2) // костыль, который помогает скрыть лишнюю клетку при поле 20 30
-                {
-                    continue;
-                }*/
                 if (indexA < rows && indexB < columns)
                 {
                     arr[indexA][indexB] = '*';
